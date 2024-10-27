@@ -116,6 +116,3 @@ Also for quick launch you can use arguments, for example:
 #2 - Create session
 ```
 
-## Acknowledgments
-
-- [Shamhi](https://github.com/shamhi)
