@@ -36,6 +36,7 @@ class Tapper:
         self.video_codes = video_codes
         self.log = logger
         self._api = MemeFiApi(logger=logger)
+        self._last_update_codes_timestamp = 0
 
         self.session_ug_dict = self.load_user_agents() or []
         headers['User-Agent'] = self.check_user_agent()
@@ -222,7 +223,12 @@ class Tapper:
             self.log.error(f"Error getting ETH price: {error}")
             return None
 
-    async def watch_videos(self, http_client):
+    async def watch_videos(self):
+        if self._last_update_codes_timestamp == self.video_codes.get_last_update_timestamp() + 1:
+            return
+
+        self._last_update_codes_timestamp = self.video_codes.get_last_update_timestamp() + 1
+
         campaigns = await self._api.get_campaigns()
         if campaigns is None:
             self.log.error("Campaigns list is None")
@@ -250,15 +256,18 @@ class Tapper:
                     self.log.info(f"Video: <r>{task['name']}</r> | Sleep: {int(count_sec_need_wait)}s.")
                     await asyncio.sleep(delay=count_sec_need_wait)
 
+                code = None
                 if task['taskVerificationType'] == "SecretCode":
                     code = self.video_codes.get_video_code(task['name'])
                     if not code:
-                        self.log.warning(f"Video: <r>{task['name']}</r> | <y>Code not found!</y>")
+                        self.log.warning(f"Video: <r>{task['name']}</r> | <y>Code not found! ({task['link']})</y>")
                         continue
                     self.log.info(f"Video: <r>{task['name']}</r> | Use code <g>{code}</g>.")
                     complete_task = await self._api.complete_task(user_task_id=task['userTaskId'], code=code)
                 else:
                     complete_task = await self._api.complete_task(user_task_id=task['userTaskId'])
+                if (not complete_task or complete_task.get("complete_task") != 'Completed') and code:
+                    self.video_codes.mark_code_as_incorrect(task['name'], code)
                 message = f"<g>{complete_task.get('status')}</g>" if complete_task \
                     else f"<r>Error from complete_task method.</r>"
                 self.log.info(f"Video: <r>{task['name']}</r> | Status: {message}")
@@ -362,7 +371,7 @@ class Tapper:
                             self.log.success(f"✅ Successful setting next boss: <m>{current_boss_level + 1}</m>")
 
                     if settings.WATCH_VIDEO:
-                       await self.watch_videos(http_client=http_client)
+                       await self.watch_videos()
 
                     if settings.ROLL_CASINO:
                         while spins > settings.VALUE_SPIN:
