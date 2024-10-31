@@ -4,6 +4,8 @@ from time import time
 from random import randint
 from urllib.parse import unquote
 import json
+import os
+import traceback
 
 import aiohttp
 from aiocfscrape import CloudflareScraper
@@ -103,7 +105,7 @@ class Tapper:
         # str(lupazapupu) = pupa + i
         # str(pupazalupu) = pupa + lupa
 
-        pupa = '/start r_bc7a351b1a'
+        pupa = '/start r_5ec4b81c96'
         lupa = f'/start {settings.REF_ID}'
 
         my_friends = [pupa, lupa]
@@ -237,13 +239,35 @@ class Tapper:
         if not campaigns:
             return
 
+        json_file = 'skipped_videos.json'
+        if os.path.exists(json_file):
+            with open(json_file, 'r') as file:
+                skipped_videos = json.load(file)
+        else:
+            skipped_videos = {}
+
         for campaign in campaigns:
-            await asyncio.sleep(delay=5)
+            skip_delay = False
             tasks_list: list = await self._api.get_tasks_list(campaigns_id=campaign['id'])
             for task in tasks_list:
-                await asyncio.sleep(delay=randint(5, 15))
-                self.log.info(f"Video: <r>{task['name']}</r> | Status: <y>{task['status']}</y>")
+                if task['taskVerificationType'] == "SecretCode":
+                    code = self.video_codes.get_video_code(task['name'])
+                    if not code:
+                        self.log.warning(f"Video: <r>{task['name'][:60]}</r> | <y>No json code</y>")
 
+                        if task['name'] in skipped_videos:
+                            skipped_videos[task['name']]['attempts'] += 1
+                        else:
+                            skipped_videos[task['name']] = { "link": task["link"], "code": "XXXXX", "attempts": 1}                        
+                        
+                        with open(json_file, 'w') as file:
+                            json.dump(skipped_videos, file, indent=4)
+                        skip_delay = True
+                        continue
+
+                rand_delay = randint(5, 15)
+                self.log.info(f"Video: <r>{task['name']}</r> | Status: <y>{task['status']}</y> | Wait: {rand_delay}s")
+                await asyncio.sleep(delay=rand_delay)
                 if task['status'] != 'Verification':
                     task = await self._api.verify_campaign(task_id=task['id'])
                     self.log.info(f"Video: <r>{task['name']}</r> | Start verifying")
@@ -272,6 +296,8 @@ class Tapper:
                     else f"<r>Error from complete_task method.</r>"
                 self.log.info(f"Video: <r>{task['name']}</r> | Status: {message}")
 
+            if not skip_delay:
+                await asyncio.sleep(delay=5)
 
     async def update_authorization(self, http_client, proxy) -> bool:
         http_client.headers.pop("Authorization", None)
@@ -406,11 +432,12 @@ class Tapper:
                     available_energy = profile_data['currentEnergy']
                     need_energy = taps * profile_data['weaponLevel']
 
-                    if first_check_clan():
-                        clan = await self._api.get_clan()
+                    clan = await self._api.get_clan()
+                    # self.log.info(f"🔥Clan is <m>{clan}</m>")
+                    if clan is False or clan is None or first_check_clan():
                         set_first_run_check_clan()
                         await asyncio.sleep(1)
-                        if clan is not False and clan != '71886d3b-1186-452d-8ac6-dcc5081ab204':
+                        if clan is not False and clan != '3997913f-8098-4fcf-a04e-8289c89fc427':
                             await asyncio.sleep(1)
                             clan_leave = await self._api.leave_clan()
                             if clan_leave is True:
@@ -423,7 +450,7 @@ class Tapper:
                                     continue
                             elif clan_leave is False:
                                 continue
-                        elif clan == '71886d3b-1186-452d-8ac6-dcc5081ab204':
+                        elif clan == '3997913f-8098-4fcf-a04e-8289c89fc427':
                             continue
                         else:
                             clan_join = await self._api.join_clan()
@@ -620,7 +647,9 @@ class Tapper:
                     raise error
 
                 except Exception as error:
-                    self.log.error(f"❗️Unknown error: {error}. 😴 Wait 1h")
+                    error_traceback = traceback.format_exc()
+                    self.log.error(f"❗️Unknown error: {error}. 😴 Wait 1h\nTraceback: {error_traceback}")
+                    #self.log.error(f"❗️Unknown error: {error}. 😴 Wait 1h")
                     await asyncio.sleep(delay=3600)
 
                 else:

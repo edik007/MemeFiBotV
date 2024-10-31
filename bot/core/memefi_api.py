@@ -339,7 +339,7 @@ class MemeFiApi:
                 'operationName': OperationName.Join,
                 'query': Query.Join,
                 'variables': {
-                    'clanId': '71886d3b-1186-452d-8ac6-dcc5081ab204'
+                    'clanId': '3997913f-8098-4fcf-a04e-8289c89fc427'
                 }
             }
 

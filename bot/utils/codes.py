@@ -4,12 +4,15 @@ from time import time
 from json import loads
 from os import path
 from bot.utils.logger import logger
+import traceback
+from fuzzywuzzy import process
 
 CodesType = dict[str, str]
 
 class VideoCodes:
 
     codes_urls = [
+        "https://raw.githubusercontent.com/edik007/MemeFiVideos/main/codes.json",
         "https://raw.githubusercontent.com/ArthurKoba/MemeFiBot/main/codes.json",
         "https://raw.githubusercontent.com/sirbiprod/MemeFiBot/main/codes.json"
     ]
@@ -90,9 +93,15 @@ class VideoCodes:
         return self._codes
 
     def get_video_code(self, video_name: str) -> str | None:
-        if video_name in self._incorrect_codes:
-            return None
-        return self._codes.get(video_name)
+        found_code = self._codes.get(video_name)
+        if found_code is None:
+            closest_match = process.extractOne(video_name, self._codes.keys())
+            if closest_match[1] > 95:
+                return self._codes.get(closest_match[0])
+        
+        #if video_name in self._incorrect_codes:
+        #    return None
+        return found_code
 
     def get_last_update_timestamp(self) -> int:
         return self._last_update_timestamp

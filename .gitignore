@@ -3,6 +3,7 @@
 referral.txt
 user_agents.json
 clancheck.txt
+skipped_videos.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
