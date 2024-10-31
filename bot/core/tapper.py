@@ -290,11 +290,11 @@ class Tapper:
                     complete_task = await self._api.complete_task(user_task_id=task['userTaskId'], code=code)
                 else:
                     complete_task = await self._api.complete_task(user_task_id=task['userTaskId'])
-                if (not complete_task or complete_task.get("complete_task") != 'Completed') and code:
-                    self.video_codes.mark_code_as_incorrect(task['name'], code)
-                message = f"<g>{complete_task.get('status')}</g>" if complete_task \
-                    else f"<r>Error from complete_task method.</r>"
-                self.log.info(f"Video: <r>{task['name']}</r> | Status: {message}")
+                #if (not complete_task or complete_task.get("complete_task") != 'Completed') and code:
+                #    self.video_codes.mark_code_as_incorrect(task['name'], code)
+                #message = f"<g>{complete_task.get('status')}</g>" if complete_task \
+                #    else f"<r>Error from complete_task method.</r>"
+                self.log.info(f"Video: <r>{task['name']}</r> | Status: <g>{complete_task.get('status')}</g>")
 
             if not skip_delay:
                 await asyncio.sleep(delay=5)
