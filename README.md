@@ -1,6 +1,11 @@
 # HiddenCode - [https://t.me/hidden_coding](https://t.me/+oBSaBMwFrx8zN2Vk)
 # TapGameDev - [https://t.me/TapGameDev](https://t.me/TapGameDev)
 
+This script is a fork of the script from sirbiprod and almost completely repeats its functionality. Therefore, all referral codes and mentions on this page were not removed and left unchanged. Only a few important changes were made to the script logic:
+1. When comparing video names, the "fuzzy string comparison" library is used, which allows you to find videos in the database, even if there are small typos in the video title.
+2. Another repository with video codes has been added, which I manage. Old repositories also work.
+3. If the video code was not found in the database, it is saved in the skipped_videos.json file in the root of the project. This is done in order to transfer these files to me (contact me via the chat specified above) so that I can add new codes to the database when possible (follow the database updates in the chat).
+4. The check for wrong code has been removed, as it does not work quite as desired and requires redesign.
 
 ![img1](./.github/image/image.png)
 
