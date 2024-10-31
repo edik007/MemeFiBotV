@@ -294,7 +294,8 @@ class Tapper:
                 #    self.video_codes.mark_code_as_incorrect(task['name'], code)
                 #message = f"<g>{complete_task.get('status')}</g>" if complete_task \
                 #    else f"<r>Error from complete_task method.</r>"
-                self.log.info(f"Video: <r>{task['name']}</r> | Status: <g>{complete_task.get('status')}</g>")
+                if complete_task is not None:
+                    self.log.info(f"Video: <r>{task['name']}</r> | Status: <g>{complete_task.get('status')}</g>")
 
             if not skip_delay:
                 await asyncio.sleep(delay=5)
